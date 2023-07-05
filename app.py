@@ -32,7 +32,7 @@ class ScheduleModel(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     name: str = Field(...)
     time: int = Field(..., ge=0, le=86400)
-    temperature: float = Field(..., ge=60.0, le=95.0)
+    temperature: float = Field(..., ge=15.5, le=35.0)
 
     class Config:
         allow_population_by_field_name = True
@@ -42,7 +42,7 @@ class ScheduleModel(BaseModel):
             "example": {
                 "name": "setPoint1",
                 "time": "3600",
-                "temperature": "69.0",
+                "temperature": "20.0",
             }
         }
 
@@ -59,7 +59,7 @@ class UpdateScheduleModel(BaseModel):
             "example": {
                 "name": "setPoint1",
                 "time": "3600",
-                "temperature": "69.0",
+                "temperature": "20.0",
             }
         }
 
