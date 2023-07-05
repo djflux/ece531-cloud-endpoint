@@ -4,6 +4,7 @@ import argparse
 import http.server
 import json
 import os
+import syslog
 
 class HTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_PUT(self):
@@ -30,6 +31,14 @@ class HTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
         self.wfile.write(json_response.encode())
+
+    def do_POST(self):
+        content_length = 0
+        content_length = int(self.headers.get("Content-Length"))
+        body = self.rfile.read(content_length)
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(body)
         
 
 if __name__ == '__main__':
