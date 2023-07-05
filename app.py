@@ -31,8 +31,8 @@ class PyObjectId(ObjectId):
 class ScheduleModel(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     name: str = Field(...)
-    time: int = Field(..., le=86400)
-    temperature: float = Field(..., le=95.0)
+    time: int = Field(..., ge=0, le=86400)
+    temperature: float = Field(..., ge=60.0, le=95.0)
 
     class Config:
         allow_population_by_field_name = True
