@@ -5,9 +5,9 @@ It based on a [blog post](https://developer.mongodb.com/quickstart/python-quicks
 
 ## Author
 Andrew Rechenberg\
-Universtory of New Mexico
-Internet of Things (IoT), Summer 2023
-arechenberg at unm dot edu
+Universtory of New Mexico\
+Internet of Things (IoT), Summer 2023\
+arechenberg at unm dot edu\
 github at rechenberg dot net
 
 ## TL;DR
