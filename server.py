@@ -36,6 +36,7 @@ class HTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         content_length = 0
         content_length = int(self.headers.get("Content-Length"))
         body = self.rfile.read(content_length)
+        syslog.syslog(body.decode())
         self.send_response(200)
         self.end_headers()
         self.wfile.write(body)
@@ -49,7 +50,10 @@ if __name__ == '__main__':
     parser.add_argument('port', action='store',
                         default=8008, type=int,
                         nargs='?',
-                        help='Specify alternate port [default: 8000]')
+                        help='Specify alternate port [default: 8008]')
     args = parser.parse_args()
+
+    HTTPRequestHandler.server_version = "ECE531Server/0.0.1"
+    HTTPRequestHandler.sys_version    = ""
 
     http.server.test(HandlerClass=HTTPRequestHandler, port=args.port, bind=args.bind)
