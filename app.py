@@ -9,7 +9,7 @@ import motor.motor_asyncio
 
 app = FastAPI()
 client = motor.motor_asyncio.AsyncIOMotorClient(os.environ["MONGODB_URL"])
-db = client.college
+db = client.thermostat
 
 
 class PyObjectId(ObjectId):
@@ -28,12 +28,11 @@ class PyObjectId(ObjectId):
         field_schema.update(type="string")
 
 
-class StudentModel(BaseModel):
+class ScheduleModel(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     name: str = Field(...)
-    email: EmailStr = Field(...)
-    course: str = Field(...)
-    gpa: float = Field(..., le=4.0)
+    time: int = Field(..., le=86400)
+    temperature: float = Field(..., le=95.0)
 
     class Config:
         allow_population_by_field_name = True
@@ -41,83 +40,80 @@ class StudentModel(BaseModel):
         json_encoders = {ObjectId: str}
         schema_extra = {
             "example": {
-                "name": "Jane Doe",
-                "email": "jdoe@example.com",
-                "course": "Experiments, Science, and Fashion in Nanophotonics",
-                "gpa": "3.0",
+                "name": "setPoint1",
+                "time": "3600",
+                "temperature": "69.0",
             }
         }
 
 
-class UpdateStudentModel(BaseModel):
-    name: Optional[str]
-    email: Optional[EmailStr]
-    course: Optional[str]
-    gpa: Optional[float]
+class UpdateScheduleModel(BaseModel):
+    name: str
+    time: int
+    temperature: float
 
     class Config:
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
         schema_extra = {
             "example": {
-                "name": "Jane Doe",
-                "email": "jdoe@example.com",
-                "course": "Experiments, Science, and Fashion in Nanophotonics",
-                "gpa": "3.0",
+                "name": "setPoint1",
+                "time": "3600",
+                "temperature": "69.0",
             }
         }
 
 
-@app.post("/", response_description="Add new student", response_model=StudentModel)
-async def create_student(student: StudentModel = Body(...)):
-    student = jsonable_encoder(student)
-    new_student = await db["students"].insert_one(student)
-    created_student = await db["students"].find_one({"_id": new_student.inserted_id})
-    return JSONResponse(status_code=status.HTTP_201_CREATED, content=created_student)
+@app.post("/", response_description="Add new schedule temperature set point", response_model=ScheduleModel)
+async def create_setpoint(setpoint: ScheduleModel = Body(...)):
+    setpoint = jsonable_encoder(setpoint)
+    new_setpoint = await db["setpoints"].insert_one(setpoint)
+    created_setpoint = await db["setpoints"].find_one({"_id": new_setpoint.inserted_id})
+    return JSONResponse(status_code=status.HTTP_201_CREATED, content=created_setpoint)
 
 
 @app.get(
-    "/", response_description="List all students", response_model=List[StudentModel]
+    "/", response_description="List all setpoints", response_model=List[ScheduleModel]
 )
-async def list_students():
-    students = await db["students"].find().to_list(1000)
-    return students
+async def list_setpoints():
+    setpoints = await db["setpoints"].find().to_list(1000)
+    return setpoints
 
 
 @app.get(
-    "/{id}", response_description="Get a single student", response_model=StudentModel
+    "/{id}", response_description="Get a single setpoint", response_model=ScheduleModel
 )
-async def show_student(id: str):
-    if (student := await db["students"].find_one({"_id": id})) is not None:
-        return student
+async def show_setpoint(id: str):
+    if (setpoint := await db["setpoints"].find_one({"_id": id})) is not None:
+        return setpoint
 
-    raise HTTPException(status_code=404, detail=f"Student {id} not found")
+    raise HTTPException(status_code=404, detail=f"Set point {id} not found")
 
 
-@app.put("/{id}", response_description="Update a student", response_model=StudentModel)
-async def update_student(id: str, student: UpdateStudentModel = Body(...)):
-    student = {k: v for k, v in student.dict().items() if v is not None}
+@app.put("/{id}", response_description="Update a setpoint", response_model=ScheduleModel)
+async def update_setpoint(id: str, setpoint: UpdateScheduleModel = Body(...)):
+    setpoint = {k: v for k, v in setpoint.dict().items() if v is not None}
 
-    if len(student) >= 1:
-        update_result = await db["students"].update_one({"_id": id}, {"$set": student})
+    if len(setpoint) >= 1:
+        update_result = await db["setpoints"].update_one({"_id": id}, {"$set": setpoint})
 
         if update_result.modified_count == 1:
             if (
-                updated_student := await db["students"].find_one({"_id": id})
+                updated_setpoint := await db["setpoints"].find_one({"_id": id})
             ) is not None:
-                return updated_student
+                return updated_setpoint
 
-    if (existing_student := await db["students"].find_one({"_id": id})) is not None:
-        return existing_student
+    if (existing_setpoint := await db["setpoints"].find_one({"_id": id})) is not None:
+        return existing_setpoint
 
-    raise HTTPException(status_code=404, detail=f"Student {id} not found")
+    raise HTTPException(status_code=404, detail=f"Set point {id} not found")
 
 
-@app.delete("/{id}", response_description="Delete a student")
-async def delete_student(id: str):
-    delete_result = await db["students"].delete_one({"_id": id})
+@app.delete("/{id}", response_description="Delete a setpoint")
+async def delete_setpoint(id: str):
+    delete_result = await db["setpoints"].delete_one({"_id": id})
 
     if delete_result.deleted_count == 1:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-    raise HTTPException(status_code=404, detail=f"Student {id} not found")
+    raise HTTPException(status_code=404, detail=f"Set point {id} not found")
