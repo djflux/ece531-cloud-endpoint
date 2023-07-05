@@ -59,5 +59,7 @@ _minted*
 *.rar
 Videos
 
-# Local binaries
-thermostatd
+# Local stuff
+__pycache__
+.vscode
+.envrc
