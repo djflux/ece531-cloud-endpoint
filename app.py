@@ -7,7 +7,7 @@ from bson import ObjectId
 from typing import Optional, List
 import motor.motor_asyncio
 
-app = FastAPI()
+app = FastAPI(docs_url=None)
 client = motor.motor_asyncio.AsyncIOMotorClient(os.environ["MONGODB_URL"])
 db = client.thermostat
 
