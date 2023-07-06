@@ -63,3 +63,4 @@ Videos
 __pycache__
 .vscode
 .envrc
+*.swp
