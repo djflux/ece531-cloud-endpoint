@@ -11,7 +11,7 @@ app = FastAPI(docs_url="/flux")
 client = motor.motor_asyncio.AsyncIOMotorClient(os.environ["MONGODB_URL"])
 db = client.thermostat
 collection_setpoints = "setpoints"
-collection_status = "status"
+collection_thermostat_status = "thermostat_status"
 
 class PyObjectId(ObjectId):
     @classmethod
@@ -64,7 +64,44 @@ class UpdateScheduleModel(BaseModel):
                 "name": "setPoint1",
                 "time": "3600",
                 "temperature": "20.0",
-                "current": "false"
+                "current": "False"
+            }
+        }
+
+class ThermostatStatusModel(BaseModel):
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    current_setpoint: str = Field(...)
+    current_temp: float = Field(...)
+    heater_status: bool = Field(False)
+    new_schedule_avaialble: bool = Field(False)
+
+    class Config:
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
+        schema_extra = {
+            "example": {
+                "current_setpoint": "setPoint3",
+                "current_temp": "19.2",
+                "heater_status": "False",
+                "new_schedule_avaialble": "False"
+            }
+        }
+
+class UpdateThermostatStatusModel(BaseModel):
+    current_setpoint: str
+    current_temp: float
+    heater_status: bool
+
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
+        schema_extra = {
+            "example": {
+                "current_setpoint": "setPoint3",
+                "current_temp": "19.2",
+                "heater_status": "False",
+                "new_schedule_available": "False"
             }
         }
 
@@ -122,3 +159,38 @@ async def delete_setpoint(id: str):
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     raise HTTPException(status_code=404, detail=f"Set point {id} not found")
+
+
+@app.get(
+    "/thermostat_status", response_description="List the current thermostat system status", response_model=List[ThermostatStatusModel]
+)
+async def list_thermostat_status():
+    thermostat_status = await db[collection_thermostat_status].find().to_list(1000)
+    return thermostat_status
+
+
+@app.post("/thermostat_status", response_description="Create thermostat status entry", response_model=ThermostatStatusModel)
+async def create_thermostat_status(thermostat_status: ThermostatStatusModel = Body(...)):
+    check_thermostat_status = []
+    check_thermostat_status = await db[collection_thermostat_status].find().to_list(1000)
+    if check_thermostat_status == []:
+        thermostat_status = jsonable_encoder(thermostat_status)
+        new_thermostat_status = await db[collection_thermostat_status].insert_one(thermostat_status)
+        created_thermostat_status = await db[collection_thermostat_status].find_one({"_id": new_thermostat_status.inserted_id})
+        return JSONResponse(status_code=status.HTTP_201_CREATED, content=created_thermostat_status)
+
+    raise HTTPException(status_code=403, detail=f"Thermostat status entry already exists. Use GET method instead.")
+
+
+@app.post("/reset_thermostat_status", response_description="Reset the thermostat status entry.")
+async def reset_thermostat_status():
+    drop_thermostat_status = [];
+    drop_thermostat_status = await db[collection_thermostat_status].find().to_list(1)
+    if drop_thermostat_status != []:
+        drop_thermostat_status = await db[collection_thermostat_status].drop()
+        if drop_thermostat_status is None:
+            return JSONResponse(status_code=200, content=f"The thermostat status entry was successfully reset.")
+        else:
+            raise HTTPException(status_code=500, detail=f"There was an internal server error resetting the status. Check server logs.")
+
+    raise HTTPException(status_code=403, detail=f"There is currently no thermostat status. POST a new status to /thermostat_status endpoint.")
