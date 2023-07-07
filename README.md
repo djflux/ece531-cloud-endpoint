@@ -19,11 +19,8 @@ activate your Python virtualenv, and then run the following from your terminal (
 # Install the requirements:
 pip install -r requirements.txt
 
-# Configure the location of your MongoDB database:
-export MONGODB_URL="mongodb://localhost:8989/thermostat?retryWrites=true&w=majority"
-
 # Start the service:
-uvicorn app:app --reload --header "server:ece531endpoint/0.0.1" --host 0.0.0.0 --port 8989
+./start.sh
 ```
 
 Now you can load http://localhost:8989/docs in your browser ... but there won't be much to see until you've inserted some data.
