@@ -105,6 +105,16 @@ class UpdateThermostatStatusModel(BaseModel):
             }
         }
 
+@app.get("/", response_description="Display entire thermostat status and set points / schedule.")
+async def list_full_status():
+    full_status = {}
+    thermostat_status = await db[collection_thermostat_status].find().to_list(2)
+    thermostat_setpoints = await db[collection_setpoints].find().to_list(5)
+    json_status = jsonable_encoder(thermostat_status)
+    json_setpoints = jsonable_encoder(thermostat_setpoints)
+    full_status["thermostat_status"] = json_status
+    full_status["setpoints"] = json_setpoints
+    return full_status
 
 @app.post("/schedule", response_description="Add new schedule temperature set point", response_model=ScheduleModel)
 async def create_setpoint(setpoint: ScheduleModel = Body(...)):
