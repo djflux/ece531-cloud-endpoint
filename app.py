@@ -1,3 +1,20 @@
+"""
+
+UNM ECE531, Intro to Internet of Things (IoT)
+Summer 2023
+
+Andrew Rechenberg
+arechenbeg at unm dot edu
+andrew at rechenberg dot net
+
+app.py uses fastapi and uvicorn to implement an API endpoint for a
+thermostat daemon running on an Internet of Things device. This code
+is part of the final project for UNM ECE531 class.
+
+The API is documented in the README.md file in this repository.
+
+"""
+
 import os
 from fastapi import FastAPI, Body, HTTPException, status
 from fastapi.responses import Response, JSONResponse
@@ -49,7 +66,6 @@ class ScheduleModel(BaseModel):
             }
         }
 
-
 class UpdateScheduleModel(BaseModel):
     name: str
     time: int
@@ -87,6 +103,8 @@ class ThermostatStatusModel(BaseModel):
                 "new_schedule_avaialble": "False"
             }
         }
+
+
 
 class UpdateThermostatStatusModel(BaseModel):
     current_setpoint: str
@@ -194,8 +212,8 @@ async def create_thermostat_status(thermostat_status: ThermostatStatusModel = Bo
     raise HTTPException(status_code=403, detail=f"Thermostat status entry already exists. Use GET method instead.")
 
 
-@app.post("/reset_thermostat_status", response_description="Reset the thermostat status entry.")
-async def reset_thermostat_status():
+@app.post("/reset_thermostat_status", response_description="Reset the thermostat status entry.", responses={403: {}, 500: {}})
+async def reset_thermostat_status(response: Response):
     drop_thermostat_status = [];
     drop_thermostat_status = await db[collection_thermostat_status].find().to_list(1)
     if drop_thermostat_status != []:
