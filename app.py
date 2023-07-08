@@ -73,6 +73,12 @@ class ScheduleModel(BaseModel):
             }
         }
 
+class ScheduleModelResponse(BaseModel):
+    setpoints: List[ScheduleModel]
+
+    class Config:
+        json_encoders = {ObjectId: str}
+
 class CleanScheduleModel(BaseModel):
     name: str = Field(...)
     time: int = Field(...)
@@ -198,11 +204,13 @@ async def create_setpoint(setpoint: ScheduleModel = Body(...)):
 
 
 @app.get(
-    "/schedule", response_description="List all setpoints", response_model=List[ScheduleModel]
+    "/schedule", response_description="List all setpoints", response_model=ScheduleModelResponse
 )
 async def list_setpoints():
     setpoints = await db[collection_setpoints].find().to_list(1000)
-    return setpoints
+    schedule = ScheduleModelResponse(setpoints=setpoints)
+    schedule = jsonable_encoder(schedule)
+    return schedule
 
 
 @app.get(
