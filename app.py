@@ -46,6 +46,13 @@ class PyObjectId(ObjectId):
         field_schema.update(type="string")
 
 
+class BaseScheduleModel(BaseModel):
+    name: str = Field(...)
+    time: int = Field(..., ge=0, le=86400)
+    temperature: float = Field(..., ge=15.5, le=35.0)
+    current: bool = Field(...)
+
+
 class ScheduleModel(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     name: str = Field(...)
@@ -63,6 +70,38 @@ class ScheduleModel(BaseModel):
                 "time": "3600",
                 "temperature": "20.0",
                 "current": "false"
+            }
+        }
+
+
+class UploadScheduleModel(BaseModel):
+    setpoints: List[BaseScheduleModel]
+
+    class Config:
+        allow_population_by_field_name = True
+        json_encoders = {ObjectId: str}
+        schema_extra = {
+            "example": {
+                "setpoints": [
+                     {
+                        "name": "setPoint1",
+                        "time": "3600",
+                        "temperature": "20",
+                        "current": "false"
+                     },
+                     {
+                        "name": "setPoint2",
+                        "time": "10000",
+                        "temperature": "20.2",
+                        "current": "true"
+                     },
+                     {
+                        "name": "setPoint3",
+                        "time": "24000",
+                        "temperature": "18.2",
+                        "current": "false"
+                     }
+                ]
             }
         }
 
@@ -203,6 +242,28 @@ async def reset_schedule(response: Response):
             raise HTTPException(status_code=500, detail=f"There was an internal server error resetting the status. Check server logs.")
 
     raise HTTPException(status_code=403, detail=f"There is currently no thermostat schedule. POST some new thermostat set points to /schedule endpoint.")
+
+
+@app.post("/upload_schedule", response_description="Upload full list of schedule set points", response_model=List[ScheduleModel])
+async def upload_schedule(full_schedule: UploadScheduleModel = Body(...)):
+    full_schedule = jsonable_encoder(full_schedule)
+    drop_schedule = []
+
+    # Reset current schedule and create new set points
+    drop_schedule = await db[collection_setpoints].find().to_list(1)
+    if drop_schedule is not None:
+        drop_setpoints = await db[collection_setpoints].drop()
+
+    for setpoint in full_schedule['setpoints']:
+        new_setpoint = await db[collection_setpoints].insert_one(setpoint)
+        created_setpoint = await db[collection_setpoints].find_one({"_id": new_setpoint.inserted_id})
+
+    setpoints = await db[collection_setpoints].find().to_list(1000)
+
+    if setpoints is not None:
+        return setpoints
+    else:
+        return HTTPException(status_code=500, detail=f"An error occurred resetting the current schedule. Contact an administrator")
 
 
 @app.get(
