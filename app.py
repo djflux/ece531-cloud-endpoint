@@ -160,6 +160,12 @@ class ThermostatStatusModel(BaseModel):
         }
 
 
+class ThermostatStatusResponse(BaseModel):
+    thermostat_status: List[ThermostatStatusModel]
+
+    class Config:
+        json_encoders = {ObjectId: str}
+
 
 class UpdateThermostatStatusModel(BaseModel):
     current_setpoint: str
@@ -298,11 +304,13 @@ async def upload_schedule(full_schedule: UploadScheduleModel = Body(...)):
 
 
 @app.get(
-    "/thermostat_status", response_description="List the current thermostat system status", response_model=List[ThermostatStatusModel]
+    "/thermostat_status", response_description="List the current thermostat system status", response_model=ThermostatStatusResponse
 )
 async def list_thermostat_status():
     thermostat_status = await db[collection_thermostat_status].find().to_list(1000)
-    return thermostat_status
+    status_reponse = ThermostatStatusResponse(thermostat_status=thermostat_status)
+    status_reponse = jsonable_encoder(status_reponse)
+    return status_reponse
 
 
 @app.post("/thermostat_status", response_description="Create thermostat status entry", response_model=ThermostatStatusModel)
