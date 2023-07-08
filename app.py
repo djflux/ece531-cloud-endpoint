@@ -73,12 +73,15 @@ class ScheduleModel(BaseModel):
             }
         }
 
-
-class ScheduleModelResponse(BaseModel):
+class CleanScheduleModel(BaseModel):
     name: str = Field(...)
     time: int = Field(...)
     temperature: float = Field(...)
     current: bool = Field(...)
+
+
+class CleanScheduleResponse(BaseModel):
+    setpoints: List[CleanScheduleModel]
 
 
 class UploadScheduleModel(BaseModel):
@@ -242,11 +245,12 @@ async def delete_setpoint(id: str):
 
 
 @app.get(
-    "/schedule_clean", response_description="List all setpoints with no _id", response_model=List[ScheduleModelResponse]
+    "/schedule_clean", response_description="List all setpoints with no _id", response_model=CleanScheduleResponse
 )
 async def list_setpoints():
     setpoints = await db[collection_setpoints].find().to_list(1000)
-    return setpoints
+    clean_schedule = CleanScheduleResponse(setpoints=setpoints)
+    return clean_schedule
 
 
 @app.post("/reset_schedule", response_description="Reset the thermostat schedule removing all temperature set points.", responses={403: {}, 500: {}})
