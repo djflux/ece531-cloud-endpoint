@@ -190,6 +190,7 @@ async def delete_setpoint(id: str):
 
     raise HTTPException(status_code=404, detail=f"Set point {id} not found")
 
+
 @app.post("/reset_schedule", response_description="Reset the thermostat schedule removing all temperature set points.", responses={403: {}, 500: {}})
 async def reset_schedule(response: Response):
     drop_schedule = [];
