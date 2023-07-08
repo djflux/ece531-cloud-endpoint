@@ -190,6 +190,19 @@ async def delete_setpoint(id: str):
 
     raise HTTPException(status_code=404, detail=f"Set point {id} not found")
 
+@app.post("/reset_schedule", response_description="Reset the thermostat schedule removing all temperature set points.", responses={403: {}, 500: {}})
+async def reset_schedule(response: Response):
+    drop_schedule = [];
+    drop_schedule = await db[collection_setpoints].find().to_list(1)
+    if drop_schedule != []:
+        drop_schedule = await db[collection_setpoints].drop()
+        if drop_schedule is None:
+            return JSONResponse(status_code=200, content=f"The thermostat status entry was successfully reset.")
+        else:
+            raise HTTPException(status_code=500, detail=f"There was an internal server error resetting the status. Check server logs.")
+
+    raise HTTPException(status_code=403, detail=f"There is currently no thermostat schedule. POST some new thermostat set points to /schedule endpoint.")
+
 
 @app.get(
     "/thermostat_status", response_description="List the current thermostat system status", response_model=List[ThermostatStatusModel]
