@@ -159,6 +159,23 @@ class ThermostatStatusModel(BaseModel):
             }
         }
 
+class UpdateThermostatStatusModel(BaseModel):
+    curren_setpoint: str
+    current_temp: float
+    heater_status: bool
+    new_schedule_available: bool
+
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
+        schema_extra = {
+            "example": {
+                "current_setpoint": "setPoint3",
+                "current_temp": "19.2",
+                "heater_status": "False",
+                "new_schedule_avaialble": "False"
+            }
+        }
 
 class ThermostatStatusResponse(BaseModel):
     thermostat_status: List[ThermostatStatusModel]
@@ -324,6 +341,25 @@ async def create_thermostat_status(thermostat_status: ThermostatStatusModel = Bo
         return JSONResponse(status_code=status.HTTP_201_CREATED, content=created_thermostat_status)
 
     raise HTTPException(status_code=403, detail=f"Thermostat status entry already exists. Use GET method instead.")
+
+
+@app.put("/thermostat_status/{id}", response_description="Update status", response_model=ThermostatStatusModel)
+async def update_status(id: str, status : UpdateThermostatStatusModel = Body(...)):
+    status = {k: v for k, v in status.dict().items() if v is not None}
+
+    if len(status) >= 1:
+        update_result = await db[collection_thermostat_status].update_one({"_id": id}, {"$set": status})
+
+        if update_result.modified_count == 1:
+            if (
+                updated_status := await db[collection_thermostat_status].find_one({"_id": id})
+            ) is not None:
+                return updated_status
+
+    if (existing_status := await db[collection_thermostat_status].find_one({"_id": id})) is not None:
+        return existing_status
+
+    raise HTTPException(status_code=404, detail=f"Set point {id} not found")
 
 
 @app.post("/reset_thermostat_status", response_description="Reset the thermostat status entry.", responses={403: {}, 500: {}})
