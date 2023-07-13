@@ -7,5 +7,7 @@ uvicorn app:app --reload \
         --host 0.0.0.0 --port 8989 \
         --log-config=log_config.yaml \
         --workers 5 \
-        --limit-concurrency 10
+        --limit-concurrency 10 \
+	--ssl-keyfile "./example.key" \
+	--ssl-certfile "./example.crt"
 
