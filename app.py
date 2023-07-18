@@ -135,7 +135,7 @@ class UpdateScheduleModel(BaseModel):
                 "name": "setPoint1",
                 "time": "3600",
                 "temperature": "20.0",
-                "current": "False"
+                "current": "On"
             }
         }
 
@@ -143,7 +143,7 @@ class ThermostatStatusModel(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     current_setpoint: str = Field(...)
     current_temp: float = Field(...)
-    heater_status: bool = Field(False)
+    heater_status: str = Field(...)
     new_schedule_avaialble: bool = Field(False)
 
     class Config:
@@ -154,7 +154,7 @@ class ThermostatStatusModel(BaseModel):
             "example": {
                 "current_setpoint": "setPoint3",
                 "current_temp": "19.2",
-                "heater_status": "False",
+                "heater_status": "Off",
                 "new_schedule_avaialble": "False"
             }
         }
@@ -162,7 +162,7 @@ class ThermostatStatusModel(BaseModel):
 class UpdateThermostatStatusModel(BaseModel):
     curren_setpoint: str
     current_temp: float
-    heater_status: bool
+    heater_status: str
     new_schedule_available: bool
 
     class Config:
@@ -172,7 +172,7 @@ class UpdateThermostatStatusModel(BaseModel):
             "example": {
                 "current_setpoint": "setPoint3",
                 "current_temp": "19.2",
-                "heater_status": "False",
+                "heater_status": "Off",
                 "new_schedule_avaialble": "False"
             }
         }
@@ -187,7 +187,7 @@ class ThermostatStatusResponse(BaseModel):
 class UpdateThermostatStatusModel(BaseModel):
     current_setpoint: str
     current_temp: float
-    heater_status: bool
+    heater_status: str
 
     class Config:
         arbitrary_types_allowed = True
@@ -196,7 +196,7 @@ class UpdateThermostatStatusModel(BaseModel):
             "example": {
                 "current_setpoint": "setPoint3",
                 "current_temp": "19.2",
-                "heater_status": "False",
+                "heater_status": "Off",
                 "new_schedule_available": "False"
             }
         }
