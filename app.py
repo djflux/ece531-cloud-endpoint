@@ -91,7 +91,7 @@ class CleanScheduleResponse(BaseModel):
 
 
 class UploadScheduleModel(BaseModel):
-    setpoints: List[BaseScheduleModel]
+    setpoints: List[ScheduleModel]
 
     class Config:
         allow_population_by_field_name = True
@@ -135,7 +135,7 @@ class UpdateScheduleModel(BaseModel):
                 "name": "setPoint1",
                 "time": "3600",
                 "temperature": "20.0",
-                "current": "On"
+                "current": "true"
             }
         }
 
