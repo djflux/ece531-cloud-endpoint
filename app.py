@@ -24,7 +24,7 @@ from bson import ObjectId
 from typing import Optional, List
 import motor.motor_asyncio
 
-app = FastAPI(docs_url="/flux")
+app = FastAPI(docs_url="/flux", redoc_url=None, openapi_url=None)
 client = motor.motor_asyncio.AsyncIOMotorClient(os.environ["MONGODB_URL"])
 db = client.thermostat
 collection_setpoints = "setpoints"
